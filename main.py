@@ -93,9 +93,12 @@ if __name__ == '__main__':
 
     num = 20000 #选择用来作为训练集的图片的数量，None表示全部
 
+    if not os.path.exists('temp_file/{}'.format(num)):
+        os.makedirs('temp_file/{}'.format(num))
+
     #如果本地存在已保存的文件，则直接读取
-    if os.path.exists('json/train_img_{}.json'.format(num)):
-        with open('json/train_img_{}.json'.format(num), 'r') as f:
+    if os.path.exists('temp_file/{}/train_img'.format(num)):
+        with open('temp_file/{}}/train_img'.format(num), 'r') as f:
             json_data = json.load(f)
         train_img_info = json_data['train_img_info']
         vocab_size = json_data['vocab_size']
@@ -104,8 +107,6 @@ if __name__ == '__main__':
         wordtoindex = json_data['wordtoindex']
         max_length = json_data['max_length']
         train_img = json_data['train_img']
-        embedding_dim = json_data['embedding_dim']
-        embedding_matrix = np.load('json/embedding_matrix_{}.npy'.format(num))
     #否则从源文件中读取处理，并保存到本地
     else:
         json_data = {}
@@ -149,7 +150,15 @@ if __name__ == '__main__':
                      glob.glob('{}/{}2017/*.jpg'.format(coco_dir, train_dir))]
         json_data['train_img'] = train_img
 
-        # Glove嵌入，将单词转换为200维的向量
+        # 保存到本地
+        with open('temp_file/{}/train_img.json'.format(num), 'w') as f:
+            json.dump(json_data, f)
+
+    # Glove嵌入，将单词转换为200维的向量
+    if os.path.exists('temp_file/{}/embedding_matrix_20000.npy'.format(num)):
+        embedding_dim = json_data['embedding_dim']
+        embedding_matrix = np.load('json/embedding_matrix_{}.npy'.format(num))
+    else:
         embeddings_index = {}
         f = open('{}/glove.6B.200d.txt'.format(coco_dir), encoding="utf-8")
         for line in tqdm(f):
@@ -166,10 +175,7 @@ if __name__ == '__main__':
                 embedding_matrix[i] = embedding_vector
 
         json_data['embedding_dim'] = embedding_dim
-        np.save('json/embedding_matrix_{}.npy'.format(num), embedding_matrix)
-
-        with open('json/train_img_{}.json'.format(num), 'w') as f:
-            json.dump(json_data, f)
+        np.save('temp_file/{}/embedding_matrix.npy'.format(num), embedding_matrix)
 
     # 模型建立与训练
     model_incptV3 = InceptionV3(weights='imagenet')
@@ -257,7 +263,7 @@ if __name__ == '__main__':
 
     model.save('models/model_{}_{}_{}.h5'.format(num, epochs, timestr))
 
-    with open('json/history_{}.txt'.format(timestr), 'wb') as f:
+    with open('history/history_{}.txt'.format(timestr), 'wb') as f:
         pickle.dump(history.history, f)
 
 

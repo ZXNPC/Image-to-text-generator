@@ -70,7 +70,7 @@ if __name__ == '__main__':
     original_image = Label(top)
 
     # 读取json数据
-    with open('json/train_img_20000.json', 'r') as f:
+    with open('temp_file/20000/train_img.json', 'r') as f:
         json_data = json.load(f)
     wordtoindex = json_data['wordtoindex']
     indextoword = json_data['indextoword']
